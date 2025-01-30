@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>ToxiVision</title>
+  <style>
+    .error { color:red; font-weight:bold; }
+    .cam-image { width:200px; height:200px; margin:0.5em; }
+    .assay-block { display:inline-block; margin:1em; border:1px solid #ddd; padding:1em; text-align:center; width:220px; }
+  </style>
+</head>
+<body>
+  <h1>ToxiVision: A Tox21 Toxicity Prediction with Grad-CAM heatmaps</h1>
+  {% if error %}
+  <p class="error">Error: {{ error }}</p>
+  {% endif %}
+  <form method="POST" action="/">
+    <label for="smiles_input">SMILES:</label>
+    <input type="text" name="smiles_input" id="smiles_input" size="50"
+           value="{{ smiles if smiles else '' }}">
+    <br><br>
+    <label>Model:</label>
+    <select name="model_choice">
+      <option value="standard" {% if model_choice=='standard' %}selected{% endif %}>Standard ResNet18</option>
+      <option value="simclr" {% if model_choice=='simclr' %}selected{% endif %}>SimCLR Fine-Tuned</option>
+    </select>
+    <br><br>
+    <button type="submit">Predict</button>
+  </form>
+
+  <hr>
+  {% if results %}
+  <h2>SMILES: {{ smiles }}</h2>
+  <div>
+    <strong>Threshold=0.5</strong>
+    <ul>
+      {% for assay, prob, lbl in results %}
+      <li>{{ assay }} -> prob={{ "%.3f"|format(prob) }}, label={{ lbl }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <h2>Grad-CAM Overlays</h2>
+  <div>
+    {% for item in assay_data %}
+      <div class="assay-block">
+        <p><strong>{{ item.assay }}</strong></p>
+        <p>prob={{ "%.3f"|format(item.prob) }}, label={{ item.label }}</p>
+        <img class="cam-image" src="/static/{{ item.heatmap }}" />
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</body>
+</html>
